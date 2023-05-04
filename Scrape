@@ -1,0 +1,162 @@
+library(xml2)
+link <-  read_html("https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_GDP")
+#GDP
+state <- xml_text(xml_find_all(link,"//table//tr//td[@style='text-align:left']"))
+state <- gsub("\n","",state)
+state <- gsub("[*]","",state)
+state <- trimws(state)
+state
+gdp <- xml_text(xml_find_all(link,"//table//tr//td[7]"))
+gdp <- gsub("\n","",gdp)
+gdp <- gsub("[$]","",gdp)
+gdp <- gsub("[,]","",gdp)
+gdp <- as.numeric(gdp)
+gdp <- trimws(gdp)
+gdp_df <- data.frame(state,gdp)
+write_csv(gdp_df, "GDPFixed.csv")
+good_gdp_df <- read.csv("GDPFixed.csv")
+#MedianAge
+link_age <- read_html("https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_median_age")
+state_age <- xml_text(xml_find_all(link_age,"//table//tr//td[2]"))
+state_age <- gsub("\n","", state_age)
+state_age <- gsub("[2]","",state_age)
+state_age <- gsub("[[]]","",state_age)
+state_age <- trimws(state_age)
+age <- xml_text(xml_find_all(link_age,"//table//tr//td[3]"))
+age <- gsub("\n","", age)
+age <- as.numeric(age)
+age_df <- data.frame(state_age,age)
+write_csv(age_df, "AgeFix.csv")
+good_age_df <- read.csv("AgeFix.csv")
+#Poltical
+link_pol <- read_html("https://en.wikipedia.org/wiki/List_of_current_United_States_governors")
+party <- xml_text(xml_find_all(link_pol,"//table//tr//td[5]"))
+party <- gsub("\n","",party)
+party <- gsub("[note 2]","",party)
+party <- gsub("[note 1]","",party)
+party <- party[-c(51,52,53,54,55)]
+state_par <- c("Alabama",
+                 "Alaska",
+                 "Arizona",
+                 "Arkansas",
+                 "California",
+                 "Colorado",
+                 "Connecticut",
+                 "Delaware",
+                 "Florida",
+                 "Georgia",
+                 "Hawaii",
+                 "Idaho",
+                 "Illinois",
+                 "Indiana",
+                 "Iowa",
+                 "Kansas",
+                 "Kentucky",
+                 "Louisiana",
+                 "Maine",
+                 "Maryland",
+                 "Massachusetts",
+                 "Michigan",
+                 "Minnesota",
+                 "Mississippi",
+                 "Missouri",
+                 "Montana",
+                 "Nebraska",
+                 "Nevada",
+                 "New Hampshire",
+                 "New Jersey",
+                 "New Mexico",
+                 "New York",
+                 "North Carolina",
+                 "North Dakota",
+                 "Ohio",
+                 "Oklahoma",
+                 "Oregon",
+                 "Pennsylvania",
+                 "Rhode Island",
+                 "South Carolina",
+                 "South Dakota",
+                 "Tennessee",
+                 "Texas",
+                 "Utah",
+                 "Vermont",
+                 "Virginia",
+                 "Washington",
+                 "West Virginia",
+                 "Wisconsin",
+                 "Wyoming",
+                 "District of Columbia")
+party_df <- data.frame(state_par,party)
+#Obesity 
+link_ob <- read_html("https://en.wikipedia.org/wiki/Obesity_in_the_United_States")
+obesity <- xml_text(xml_find_all(link_ob,"//table//tr//td[4]"))
+obesity <- obesity[-c(3,13,38,43,51)]
+obesity_state <- c("Alabama",
+                                  "Alaska",
+                                  "Arizona",
+                                  "Arkansas",
+                                  "California",
+                                  "Colorado",
+                                  "Connecticut",
+                                  "Delaware",
+                   "District of Columbia",
+                                  "Florida",
+                                  "Georgia",
+                                  "Hawaii",
+                                  "Idaho",
+                                  "Illinois",
+                                  "Indiana",
+                                  "Iowa",
+                                  "Kansas",
+                                  "Kentucky",
+                                  "Louisiana",
+                                  "Maine",
+                                  "Maryland",
+                                  "Massachusetts",
+                                  "Michigan",
+                                  "Minnesota",
+                                  "Mississippi",
+                                  "Missouri",
+                                  "Montana",
+                                  "Nebraska",
+                                  "Nevada",
+                                  "New Hampshire",
+                                  "New Jersey",
+                                  "New Mexico",
+                                  "New York",
+                                  "North Carolina",
+                                  "North Dakota",
+                                  "Ohio",
+                                  "Oklahoma",
+                                  "Oregon",
+                                  "Pennsylvania",
+                                  "Rhode Island",
+                                  "South Carolina",
+                                  "South Dakota",
+                                  "Tennessee",
+                                  "Texas",
+                                  "Utah",
+                                  "Vermont",
+                                  "Virginia",
+                                  "Washington",
+                                  "WestVirginia",
+                                  "Wisconsin",
+                                  "Wyoming")
+obesity_df <- data.frame(obesity_state,obesity)
+
+second_df <- merge(obesity_df,party_df, by.x = "obesity_state",by.y = "state_par")
+second_df <- merge(second_df, good_age_df, by.x = "obesity_state", by.y = "state_age")
+second_df <- merge(second_df, good_gdp_df, by.x = "obesity_state", by.y = "state")
+
+covid_df <- read.csv("USA Covid Data.csv")
+
+final_df <- merge(second_df, covid_df, by.x = "obesity_state", by.y = "State")
+names(final_df)[names(final_df)=="obesity_state"]<-"State"
+write.csv(final_df,"Project_DF.csv")
+
+
+
+
+
+
+
